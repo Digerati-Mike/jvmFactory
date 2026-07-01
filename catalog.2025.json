@@ -1,0 +1,495 @@
+{
+    "meta": {
+        "description": "ColdFusion JVM argument security catalog. Every flag is sourced from the two Adobe JVM argument guides and carries the update it shipped in, whether it is a breaking change, and the values considered secure so the client can compute a weighted secure score.",
+        "sources": [
+            "https://guides.adobe.com/coldfusion/en/docs/install-and-configure-coldfusion/jvm-arguments-coldfusion-2025.html"
+        ],
+        "scoring": {
+            "method": "score = round(sum(weight of security flags in secure state) / sum(weight of all security flags) * 100)",
+            "severityWeights": {
+                "critical": 10,
+                "high": 7,
+                "medium": 4,
+                "low": 2,
+                "none": 0
+            },
+            "grades": {
+                "A": ">= 90",
+                "B": ">= 80",
+                "C": ">= 70",
+                "D": ">= 60",
+                "F": "< 60"
+            },
+            "notes": "A flag with a `secure` value takes its secure value from that field; otherwise the documented `default` is treated as the secure baseline. A flag that is not present in JVMArguments is evaluated at its documented default."
+        }
+    },
+    "arguments": {
+        "-Dcoldfusion.attachment.allowblockedextensions": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 10,
+            "description": "When false (default), attachments whose extensions are on the blocked list are rejected by cfexchange/cfpop/cfimap. Setting true accepts all attachment types and increases risk.",
+            "recommendation": "Keep false unless a trusted workflow requires blocked extensions."
+        },
+        "-Dcoldfusion.xml.saxon.allowResultDocument": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 10,
+            "description": "Controls xsl:result-document in Saxon XSLT used by XMLSearch/XMLTransform. False (default) blocks stylesheets writing arbitrary files.",
+            "recommendation": "Keep false to prevent arbitrary file writes from stylesheets."
+        },
+        "-Dcoldfusion.xml.saxon.allowUnparsedText": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 10,
+            "description": "Controls the unparsed-text() family in Saxon XSLT. False (default) blocks stylesheets reading arbitrary server files.",
+            "recommendation": "Keep false to prevent server-side file disclosure."
+        },
+        "-Dcoldfusion.xml.saxon.allowDocFunction": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 10,
+            "description": "Controls doc(), doc-available() and document() in Saxon XSLT. False (default) blocks loading external or server-side XML.",
+            "recommendation": "Keep false to prevent SSRF/file disclosure via stylesheets."
+        },
+        "-Dcoldfusion.xml.saxon.allowEnvironmentVariable": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 10,
+            "description": "Controls environment-variable() in Saxon XSLT. False (default) blocks stylesheets from reading host environment variables.",
+            "recommendation": "Keep false to prevent environment variable disclosure."
+        },
+        "-Dcoldfusion.async.emptyfuture.blocking": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 8,
+            "description": "Controls get() on incomplete empty futures from runAsync(). True (default) blocks per CompletableFuture semantics; false throws TaskNotCompletedException immediately (legacy behavior)."
+        },
+        "-Dcoldfusion.allow.restricted.exception.types": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 8,
+            "description": "When false (default), engine-reserved exception types (Database, Security, Template, etc.) cannot be used in user cfthrow/throw(). True allows them and can mask engine errors.",
+            "recommendation": "Keep false so reserved exception types stay engine-owned."
+        },
+        "-Dcoldfusion.qoq.enforceOldBehaviour": {
+            "type": "boolean",
+            "default": false,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 8,
+            "description": "Compatibility flag for Query of Queries GROUP BY. Enabled restores legacy GROUP BY behavior."
+        },
+        "-Dcoldfusion.qoq.parallel": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 8,
+            "description": "Enables parallel processing for Query of Queries. Disabling restores the older non-parallel behavior."
+        },
+        "-Dcoldfusion.qoq.parallel.threshold": {
+            "type": "number",
+            "default": 10000,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 8,
+            "description": "Row-count threshold above which Query of Queries parallelization is applied. Default 10000."
+        },
+        "-Dcoldfusion.mongodb.returnIdAsString": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 8,
+            "description": "True (default) returns MongoDB _id as a plain string; false returns a CFMongoObjectID wrapper required for native ObjectId interop."
+        },
+        "-Dcoldfusion.administrator.inputlengthfilter.maxlength": {
+            "type": "number",
+            "default": null,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 7,
+            "description": "Increases the maximum input length accepted by the Administrator/Admin API (e.g. 65536 for large SAML XML). Raising this weakens an input-size guard, so only increase when required."
+        },
+        "-Dcoldfusion.websocket.selector.validation": {
+            "type": "boolean",
+            "default": true,
+            "secure": true,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 5,
+            "description": "Enables WebSocket selector deny-list validation. True (default) ensures selector expressions cannot carry dangerous ColdFusion commands.",
+            "recommendation": "Keep true so selector expressions stay logical-only."
+        },
+        "-Dcoldfusion.deserialization.safeguard.enabled": {
+            "type": "boolean",
+            "default": true,
+            "secure": true,
+            "security": true,
+            "severity": "critical",
+            "weight": 10,
+            "breaking": true,
+            "update": 5,
+            "description": "Default-deny Java deserialization safeguard: only classes required by ColdFusion or allow-listed in serialfilter.txt are permitted. False reverts to the vulnerable legacy behavior.",
+            "recommendation": "Keep true. Disabling re-opens deserialization RCE vectors."
+        },
+        "-Dcoldfusion.pdf.ddx.allowExternalEntities": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": false,
+            "update": 5,
+            "description": "Controls external XML entity resolution in DDX files processed by cfpdf action=processddx. False (default) blocks external entities (XXE).",
+            "recommendation": "Keep false to prevent XXE via DDX."
+        },
+        "-Dcoldfusion.datasource.allowed.properties": {
+            "type": "list",
+            "default": null,
+            "secure": "",
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": false,
+            "update": 5,
+            "description": "All risky datasource connection-string properties are blocked by default. This flag allow-lists specific ones (allowLoadLocalInfile, allowUrlInLocalInfile, autoDeserialize). Any value here re-enables a dangerous property.",
+            "recommendation": "Leave unset. Allow-listing autoDeserialize / local infile enables data exfiltration and RCE vectors."
+        },
+        "-Dcoldfusion.xml.allowExternalEntities": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "critical",
+            "weight": 10,
+            "breaking": true,
+            "update": 3,
+            "description": "Controls external entity resolution during XML parsing. False (default) prevents XML External Entity (XXE) file disclosure and denial-of-service attacks.",
+            "recommendation": "Keep false. Setting true exposes blind XXE."
+        },
+        "-Dcoldfusion.runtime.remotemethod.matchArguments": {
+            "type": "boolean",
+            "default": true,
+            "secure": true,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 2,
+            "description": "True (default) enforces strict argument matching on remote CFC methods: only declared arguments are accepted. False allows extra/undeclared arguments.",
+            "recommendation": "Keep true to preserve remote method integrity."
+        },
+        "-Dcoldfusion.systemprobe.allowexecution": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": false,
+            "update": 2,
+            "description": "False (default) prevents a System Probe from executing during a failure. True enables probe execution.",
+            "recommendation": "Keep false unless actively diagnosing a failure."
+        },
+        "-Dcoldfusion.pdfg.connectionTimeout": {
+            "type": "number",
+            "default": null,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 1,
+            "description": "Timeout in milliseconds for PDF conversion; conversions exceeding it are timed out with an exception."
+        },
+        "-Dcoldfusion.datasource.blocked.properties": {
+            "type": "list",
+            "default": null,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Legacy block-list for datasource connection-string properties (allowLoadLocalInfile, allowUrlInLocalInfile, autoDeserialize). NOTE: this flag does not work after ColdFusion 2025 Update 5 - use -Dcoldfusion.datasource.allowed.properties instead."
+        },
+        "-Dcoldfusion.compiler.block.bytecode": {
+            "type": "boolean",
+            "default": true,
+            "secure": true,
+            "security": true,
+            "severity": "critical",
+            "weight": 10,
+            "breaking": true,
+            "update": 0,
+            "description": "True (default) prevents ColdFusion from executing pre-compiled CFML (Java bytecode) at runtime, blocking a common code-execution vector.",
+            "recommendation": "Keep true. Disabling allows attacker-supplied bytecode to run."
+        },
+        "-Dcoldfusion.encryption.useCFMX_COMPATAsDefault": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "removed": true,
+            "update": 0,
+            "description": "Removed in ColdFusion 2025. Previously forced the weak CFMX_COMPAT algorithm as the default for seven encryption functions."
+        },
+        "-Dcoldfusion.searchimplicitscopes": {
+            "type": "boolean",
+            "default": true,
+            "secure": false,
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls searching implicit scopes (variables, arguments, form, URL, ...) for un-scoped variables. Adobe recommends false for proper security enforcement; the flag is scheduled for removal.",
+            "recommendation": "Set false so ColdFusion does not auto-search implicit scopes."
+        },
+        "-Dcfdocument.metahttpequivrefresh.localfile": {
+            "type": "boolean",
+            "default": true,
+            "secure": false,
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "Affects how cfdocument handles the HTML meta refresh directive for local files. Allowing the URL/location in the meta tag can be abused, so blocking it (false) is safer.",
+            "recommendation": "Set false and sanity-check any URL before allowing meta refresh."
+        },
+        "-Djdk.lang.Process.allowAmbiguousCommands": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls how Java parses ambiguous command lines on Windows. False (default) is the safer behavior.",
+            "recommendation": "Keep false to avoid ambiguous command parsing on Windows."
+        },
+        "-Dcoldfusion.sessioncookie.httponly": {
+            "type": "boolean",
+            "default": false,
+            "secure": true,
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "Determines whether session cookies are hidden from client-side JavaScript. True sets HttpOnly and mitigates cookie theft via XSS.",
+            "recommendation": "Set true so session cookies are HttpOnly."
+        },
+        "-Dcoldfusion.xml.allowPathCharacters": {
+            "type": "boolean",
+            "default": true,
+            "secure": true,
+            "security": true,
+            "severity": "low",
+            "weight": 2,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls whether XML parsing allows path characters (/, \\, :) in element names, attributes or values."
+        },
+        "-Duser.timezone=<timezone>": {
+            "type": "string",
+            "default": null,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Sets the ColdFusion host time zone, e.g. -Duser.timezone=GMT for UTC."
+        },
+        "-Dfile.encoding": {
+            "type": "string",
+            "default": "UTF-8",
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Sets the encoding of ColdFusion files (.cfc/.cfm)."
+        },
+        "-Dcoldfusion.monitoring.id.reset": {
+            "type": "boolean",
+            "default": true,
+            "secure": true,
+            "security": true,
+            "severity": "low",
+            "weight": 2,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls whether the PMT monitoring ID is reset when the server starts. Resetting on restart is the more secure choice."
+        },
+        "-Dcoldfusion.number.allowdotsuffix": {
+            "type": "boolean",
+            "default": false,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "If false, an operand with a trailing dot is evaluated as a string."
+        },
+        "-Djdk.tls.client.protocols": {
+            "type": "list",
+            "default": "TLSv1.2,TLSv1.3",
+            "secure": "TLSv1.2,TLSv1.3",
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "TLS protocols used by TLS/SSL clients. Restricting to TLSv1.2,TLSv1.3 avoids legacy, insecure protocols.",
+            "recommendation": "Keep to TLSv1.2,TLSv1.3; do not add TLSv1/TLSv1.1/SSLv3."
+        },
+        "-Dhttps.protocols": {
+            "type": "list",
+            "default": "TLSv1.2,TLSv1.3",
+            "secure": "TLSv1.2,TLSv1.3",
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "TLS protocols used by HTTPS connections in ColdFusion.",
+            "recommendation": "Keep to TLSv1.2,TLSv1.3; do not re-enable legacy protocols."
+        },
+        "-Dcoldfusion.sftp.enable-ssh-rsa": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "Enables the legacy ssh-rsa algorithm for sFTP. False (default) keeps the weaker algorithm disabled.",
+            "recommendation": "Keep false unless a legacy sFTP peer requires ssh-rsa."
+        },
+        "-Dcoldfusion.sftp.fingerprint": {
+            "type": "string",
+            "default": "SHA256",
+            "secure": "SHA256",
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "Fingerprint algorithm for sFTP. SHA256 (default) is stronger than md5.",
+            "recommendation": "Keep SHA256; avoid md5."
+        },
+        "-Dcoldfusion.application.orderby.caseinsensitive": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Determines whether string columns are ordered case-insensitively by ORDER BY like traditional databases."
+        },
+        "-Dcoldfusion.jdbc.mysql.datetime.str": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "If true, converts MySQL datetime objects to strings."
+        },
+        "-Dcoldfusion.jdbc.mssql.multi_resultset.supported": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls resultset parsing behavior for SQL Server ResultSets."
+        },
+        "-Dorg.osgi.framework.bootdelegation": {
+            "type": "string",
+            "default": "com.singularity.*",
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Enables scheduled tasks to run in a Docker image."
+        },
+        "-Dcoldfusion.orderedstruct.size": {
+            "type": "number",
+            "default": 32,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Sets the initial size of ordered structs."
+        },
+        "-Dcoldfusion.http.usepooling": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls whether outbound HTTP connections are pooled and reused."
+        }
+    }
+}
