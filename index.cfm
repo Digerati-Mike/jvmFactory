@@ -1,11 +1,14 @@
 <cfscript>
+    // read the config.json file for the jvmFactory credentials
+    jvmFactoryConfig = deserializeJSON( fileRead( ExpandPath('.\config.json') ) );
+
     // initialize the jvmFactory
     jvmFactory  = new jvmFactory( { 
-        "userName" : "{{userName}}", 
-        "password" : "{{password}}", 
+        "userName" : jvmFactoryConfig.userName, 
+        "password" : jvmFactoryConfig.password, 
         "backup_dir" : ExpandPath('.\_backups\') 
     } );
-
+    
 
     // 1. What exactly is insecure?
     audit = jvmFactory.AuditSecurity();
