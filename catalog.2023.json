@@ -2,7 +2,8 @@
     "meta": {
         "description": "ColdFusion JVM argument security catalog. Every flag is sourced from the two Adobe JVM argument guides and carries the update it shipped in, whether it is a breaking change, and the values considered secure so the client can compute a weighted secure score.",
         "sources": [
-            "https://guides.adobe.com/coldfusion/en/docs/install-and-configure-coldfusion/new-jvm-arguments-2023-2021-coldfusion-updates.html"
+            "https://guides.adobe.com/coldfusion/en/docs/install-and-configure-coldfusion/new-jvm-arguments-2023-2021-coldfusion-updates.html",
+            "https://guides.adobe.com/coldfusion/en/docs/install-and-configure-coldfusion/coldfusion-2023-release-update-26.html"
         ],
         "scoring": {
             "method": "score = round(sum(weight of security flags in secure state) / sum(weight of all security flags) * 100)",
@@ -27,14 +28,170 @@
         "-Djdk.serialFilter": {
             "type": "list",
             "default": null,
-            "secure": "!org.mozilla.**;!com.sun.syndication.**;!org.apache.commons.beanutils.**;!org.jgroups.**;!com.sun.rowset.**",
+            "secure": "!org.mozilla.**;!com.sun.syndication.**;!org.apache.commons.beanutils.**;!org.jgroups.**;!com.sun.rowset.**;!com.mysql.cj.jdbc.interceptors.**;!org.apache.commons.collections.**",
             "security": false,
             "severity": "high",
             "weight": 0,
             "breaking": false,
             "update": 0,
-            "description": "JEE-only: does NOT apply to a standalone ColdFusion install. On JEE installations, restricts classes allowed during Java deserialization. Set the documented deny filter in the app server startup file. Informational here (excluded from the secure score).",
+            "description": "JEE-only: does NOT apply to a standalone ColdFusion install. On JEE installations, restricts classes allowed during Java deserialization. Set the documented deny filter in the app server startup file. Update 26 extends the documented filter with !com.mysql.cj.jdbc.interceptors.** and !org.apache.commons.collections.**. Informational here (excluded from the secure score).",
             "recommendation": "On JEE, set the deny filter to block known gadget-chain packages."
+        },
+        "-Dcoldfusion.security.ssrf.disableProtection": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "critical",
+            "weight": 10,
+            "breaking": true,
+            "update": 26,
+            "description": "Disables ColdFusion's Server-Side Request Forgery (SSRF) protection, i.e. the outbound network security policy that blocks server-initiated HTTP/HTTPS connections to private networks, link-local addresses and cloud metadata services (cfdocument, cffeed, cfimage, cfschedule, WSDL, GraphQL and related features). Protection is on by default; true turns it off server-wide. Note: the Adobe update page table lists the default as true, but the page itself documents protection as enabled by default.",
+            "recommendation": "Keep false. Use outboundNetwork.allowList in security-settings.json or this.security.outboundNetwork.allowList in Application.cfc to permit specific internal destinations instead of disabling protection."
+        },
+        "-Dcoldfusion.cppcfx.disableLibraryPathValidation": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 26,
+            "description": "Disables file-system path validation for native C++ CFX libraries. When false (default), ColdFusion canonicalizes each library path and loads it only if it matches the cppcfxlibrarypaths allowlist in cf_root/lib/pathfilter.json (empty by default, so all native CFX libraries are blocked until allow-listed). Java CFX tags are unaffected. True restores unrestricted loading.",
+            "recommendation": "Keep false and add trusted native CFX library paths to cppcfxlibrarypaths in pathfilter.json instead."
+        },
+        "-Dcoldfusion.rds.security.disableFileProtection": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": false,
+            "update": 26,
+            "description": "Disables file protection for Remote Development Services (RDS). When false (default), RDS file operations are subject to file protection restrictions; true allows RDS file operations without those restrictions.",
+            "recommendation": "Keep false so RDS file operations remain restricted."
+        },
+        "-Dcoldfusion.saferegex.maxpatternlen": {
+            "type": "number",
+            "default": 1000,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 26,
+            "description": "Maximum allowed length (characters) of a regular expression pattern processed by the SafeRegex implementation. Default 1000. Guards against pathological patterns; raise only if legitimate patterns are rejected."
+        },
+        "-Dcoldfusion.saferegex.maxsubjectlen": {
+            "type": "number",
+            "default": 100000,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 26,
+            "description": "Maximum length (characters) of the input string that the SafeRegex implementation will process. Default 100000. Limits regex denial-of-service exposure on large inputs."
+        },
+        "-Dcoldfusion.saferegex.matchtimeoutms": {
+            "type": "number",
+            "default": 250,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 26,
+            "description": "Maximum time in milliseconds allowed for a single SafeRegex match operation. Default 250. Bounds catastrophic-backtracking (ReDoS) cost; raise only if legitimate matches time out."
+        },
+        "-Dcoldfusion.saferegex.stringfunc.patterncachesize": {
+            "type": "number",
+            "default": 2000,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 26,
+            "description": "Maximum number of compiled regular expression patterns cached for ColdFusion string functions (reFind, reReplace, etc.). Default 2000. Performance tunable."
+        },
+        "-Dcoldfusion.xml.wstxMaxEntityCount": {
+            "type": "number",
+            "default": 100000,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 26,
+            "description": "Maximum number of XML entities the Woodstox XML parser will process while parsing a document. Default 100000. Mitigates entity-expansion (billion laughs) denial of service; raise only for trusted documents that legitimately exceed it."
+        },
+        "-Dcoldfusion.xml.wstxMaxEntityDepth": {
+            "type": "number",
+            "default": 500,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 26,
+            "description": "Maximum nesting depth of XML entities the Woodstox XML parser will process. Default 500. Mitigates recursive entity-expansion denial of service."
+        },
+        "-Dcoldfusion.sql.allowUnsafeStoredProcIdentifiers": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 24,
+            "description": "Backward-compatibility flag for cfstoredproc identifier handling. When false (default), ColdFusion validates procedure names and cfprocparam dbvarname values before SQL execution; true restores unsafe legacy behavior.",
+            "recommendation": "Keep false to preserve stored-procedure identifier validation before SQL execution."
+        },
+        "-Dcoldfusion.debugger.bindhost": {
+            "type": "string",
+            "default": "127.0.0.1",
+            "secure": "127.0.0.1",
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 23,
+            "description": "Interface the RDS/line-debugger Jetty HTTP server binds to. Previously bound 0.0.0.0 unconditionally; now defaults to loopback. Setting 0.0.0.0 or a NIC IP exposes the debugger to the network.",
+            "recommendation": "Keep 127.0.0.1 so the line debugger is reachable only from the host."
+        },
+        "-Dcoldfusion.xml.saxon.allowCollection": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 23,
+            "description": "Gates Saxon's collection()/uri-collection() XPath functions. False (default) denies file:/// and http:// collection URIs via DenyCollectionFinder; true restores unrestricted behavior.",
+            "recommendation": "Keep false to prevent file disclosure and SSRF via collection URIs."
+        },
+        "-Dcoldfusion.websocket.requireAuthForInvoke": {
+            "type": "boolean",
+            "default": true,
+            "secure": true,
+            "security": true,
+            "severity": "critical",
+            "weight": 10,
+            "breaking": true,
+            "update": 23,
+            "description": "True (default) requires a WebSocket connection to be authenticated before it can invoke access=remote CFC methods. False allows unauthenticated connections to invoke CFC methods over the channel. Since Update 26 the per-application setting this.wsRequireAuthForInvoke in Application.cfc can also opt out.",
+            "recommendation": "Keep true. Disabling allows unauthenticated remote method invocation; prefer the per-application opt-out if one app truly needs it."
+        },
+        "-Dcoldfusion.sql.allowUnsafeTableIdentifiers": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "high",
+            "weight": 7,
+            "breaking": true,
+            "update": 22,
+            "description": "Backward-compatibility flag for legacy table identifier handling. When false (default), ColdFusion validates table identifiers before SQL construction and rejects unsupported characters; true restores unsafe legacy behavior.",
+            "recommendation": "Keep false to preserve identifier validation before SQL execution."
         },
         "-Dcoldfusion.attachment.allowblockedextensions": {
             "type": "boolean",
@@ -309,12 +466,12 @@
         },
         "-Dcoldfusion.searchimplicitscopes": {
             "type": "boolean",
-            "default": true,
+            "default": false,
             "secure": false,
             "security": true,
             "severity": "medium",
-            "weight": 4,
-            "breaking": false,
+            "weight": 10,
+            "breaking": true,
             "update": 7,
             "description": "Controls searching implicit scopes for un-scoped variables. Adobe recommends false for security.",
             "recommendation": "Set false."
@@ -328,6 +485,205 @@
             "breaking": false,
             "update": 7,
             "description": "Instructs ColdFusion to treat datetime values as strings when passing them to the JDBC driver. Default false."
+        },
+        "-Djdk.lang.Process.allowAmbiguousCommands": {
+            "type": "boolean",
+            "default": false,
+            "secure": false,
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls how Java parses ambiguous command lines on Windows. False (default) is the safer behavior.",
+            "recommendation": "Keep false to avoid ambiguous command parsing on Windows."
+        },
+        "-Dcoldfusion.sessioncookie.httponly": {
+            "type": "boolean",
+            "default": false,
+            "secure": true,
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "Determines whether session cookies are hidden from client-side JavaScript. True sets HttpOnly and mitigates cookie theft via XSS.",
+            "recommendation": "Set true so session cookies are HttpOnly."
+        },
+        "-Dcoldfusion.xml.allowPathCharacters": {
+            "type": "boolean",
+            "default": true,
+            "secure": true,
+            "security": true,
+            "severity": "low",
+            "weight": 2,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls whether XML parsing allows path characters (/, \\, :) in element names, attributes or values."
+        },
+        "-Djdk.tls.client.protocols": {
+            "type": "list",
+            "default": "TLSv1.2,TLSv1.3",
+            "secure": "TLSv1.2,TLSv1.3",
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "TLS protocols used by TLS/SSL clients. Restricting to TLSv1.2,TLSv1.3 avoids legacy, insecure protocols.",
+            "recommendation": "Keep to TLSv1.2,TLSv1.3; do not add TLSv1/TLSv1.1/SSLv3."
+        },
+        "-Dhttps.protocols": {
+            "type": "list",
+            "default": "TLSv1.2,TLSv1.3",
+            "secure": "TLSv1.2,TLSv1.3",
+            "security": true,
+            "severity": "medium",
+            "weight": 4,
+            "breaking": false,
+            "update": 0,
+            "description": "TLS protocols used by HTTPS connections in ColdFusion.",
+            "recommendation": "Keep to TLSv1.2,TLSv1.3; do not re-enable legacy protocols."
+        },
+        "-Duser.timezone=<timezone>": {
+            "type": "string",
+            "default": null,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Sets the ColdFusion host time zone, e.g. -Duser.timezone=GMT for UTC."
+        },
+        "-Dfile.encoding": {
+            "type": "string",
+            "default": "UTF-8",
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Sets the encoding of ColdFusion files (.cfc/.cfm)."
+        },
+        "-Dcoldfusion.number.allowdotsuffix": {
+            "type": "boolean",
+            "default": false,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "If false, an operand with a trailing dot is evaluated as a string."
+        },
+        "-Dcoldfusion.application.orderby.caseinsensitive": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Determines whether string columns are ordered case-insensitively by ORDER BY like traditional databases."
+        },
+        "-Dcoldfusion.jdbc.mysql.datetime.str": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "If true, converts MySQL datetime objects to strings."
+        },
+        "-Dcoldfusion.jdbc.mssql.multi_resultset.supported": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls resultset parsing behavior for SQL Server ResultSets."
+        },
+        "-Dorg.osgi.framework.bootdelegation": {
+            "type": "string",
+            "default": "com.singularity.*",
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Enables scheduled tasks to run in a Docker image."
+        },
+        "-Dcoldfusion.orderedstruct.size": {
+            "type": "number",
+            "default": 32,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Sets the initial size of ordered structs."
+        },
+        "-Dcoldfusion.http.usepooling": {
+            "type": "boolean",
+            "default": true,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Controls whether outbound HTTP connections are pooled and reused."
+        },
+        "-Djdk.tls.rejectClientInitiatedRenegotiation": {
+            "type": "boolean",
+            "default": false,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Standard JDK flag (not listed in the Adobe JVM argument guides). When true, client-initiated TLS renegotiation is rejected, mitigating renegotiation-based denial of service. Informational here (excluded from the secure score)."
+        },
+        "-XX:MaxGCPauseMillis": {
+            "type": "number",
+            "default": 200,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Target for maximum GC pause time in milliseconds. The JVM tries to keep GC pauses shorter than this value."
+        },
+        "-XX:ParallelGCThreads": {
+            "type": "number",
+            "default": 20,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Number of threads used during parallel phases of the garbage collectors."
+        },
+        "-XX:ConcGCThreads": {
+            "type": "number",
+            "default": 5,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Number of threads used for concurrent garbage collection work."
+        },
+        "-XX:InitiatingHeapOccupancyPercent": {
+            "type": "number",
+            "default": 70,
+            "security": false,
+            "severity": "none",
+            "weight": 0,
+            "breaking": false,
+            "update": 0,
+            "description": "Java heap occupancy threshold that triggers a marking cycle in the G1 garbage collector."
         }
     }
 }

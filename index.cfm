@@ -1,7 +1,30 @@
 <cfscript>
-    // read the config.json file for the jvmFactory credentials
-    jvmFactoryConfig = deserializeJSON( fileRead( ExpandPath('.\config.json') ) );
 
+
+    tmpConfigFile = ExpandPath('.\config.json');
+
+
+    if( !FileExists( tmpConfigFile ) ){  
+
+        WriteOutput( '
+
+            <div style="text-align: center; font-weight: bold;">
+                <span style="color:red">!!!WARNING!!!</span> 
+                <hr />
+                CFAdmin credentials are needed for this component.
+            </div>
+            <hr />
+            <div style="text-align: center;">
+                For a proof of concept or testing populate the config.example.json and rename to config.json. Do not leave this code with plain text credentials in production ESPECIALLY on a public web root on a web server.
+            </div>
+
+
+        ' );
+        abort;
+    }
+    // read the config.json file for the jvmFactory credentials
+    jvmFactoryConfig = deserializeJSON( fileRead( tmpConfigFile ) );
+    
     // initialize the jvmFactory
     jvmFactory  = new jvmFactory( { 
         "userName" : jvmFactoryConfig.userName, 
